@@ -1,0 +1,99 @@
+{
+    "modelName": "kintyrespeedtestdataset",
+    "displayName": "kintyre-speedtest-dataset",
+    "description": "",
+    "objectSummary": {
+        "Event-Based": 0,
+        "Transaction-Based": 0,
+        "Search-Based": 1
+    },
+    "objects": [
+        {
+            "objectName": "RootObject",
+            "displayName": "kintyrespeedtestdataset",
+            "parentName": "BaseSearch",
+            "comment": "",
+            "fields": [
+                {
+                    "fieldName": "_time",
+                    "owner": "RootObject",
+                    "type": "timestamp",
+                    "fieldSearch": "_time=*",
+                    "required": true,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "_time",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "Download",
+                    "owner": "RootObject",
+                    "type": "number",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "Download",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "ISP",
+                    "owner": "RootObject",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "ISP",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "Ping",
+                    "owner": "RootObject",
+                    "type": "number",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "Ping",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "Upload",
+                    "owner": "RootObject",
+                    "type": "number",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "Upload",
+                    "comment": ""
+                },
+                {
+                    "fieldName": "host",
+                    "owner": "RootObject",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "displayName": "host",
+                    "comment": ""
+                }
+            ],
+            "calculations": [],
+            "constraints": [],
+            "lineage": "RootObject",
+            "baseSearch": "((index=\"kintyre-speedtest\") (sourcetype=\"kintyre-speedtest-cli\" OR sourcetype=\"kintyre-speedtest-json\")) | fields \"_time\", \"Download\", \"host\", \"ip\", \"ISP\", \"Ping\", \"timestamp\", \"Upload\", \"_raw\""
+        }
+    ],
+    "objectNameList": [
+        "RootObject"
+    ]
+}

@@ -1,0 +1,16 @@
+# Python stuff
+*.py[co]
+venv
+
+# Editor things
+.*.swp
+*.bak
+
+# OS stuff
+.DS_Store
+Thumbs.db
+
+# Archives (app builds, ...)
+*.tar.gz
+*.tgz
+

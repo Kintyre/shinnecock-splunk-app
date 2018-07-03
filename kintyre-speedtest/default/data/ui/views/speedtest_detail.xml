@@ -1,0 +1,200 @@
+<form>
+  <label>Speedtest Detail</label>
+  <description>Drill-down into a specific speed-test reporting device</description>
+  <search id="updown_search">
+    <query>
+    | tstats count avg(download) as download, avg(upload) as upload, avg(ping) as ping, sum(bytes_received) as bytes_received, sum(bytes_sent) as bytes_sent, values(wlan.SSID) as wlan.SSID, values(wlan.BSSID) as BSSID, values(client.isp) as client.isp, values(address) as address where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host|s$ dev=$dev|s$ $server_filter$ by _time, server.host, client.ip dev span=5m
+    | eval Upload=round(upload/1048576,2)
+    | eval Download=round(download/1048576,2)
+    </query>
+    <earliest>$t.earliest$</earliest>
+    <latest>$t.latest$</latest>
+  </search>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="host">
+      <label>Host</label>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| tstats count where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" dev=* by host | sort host</query>
+        <earliest>$t.earliest$</earliest>
+        <latest>$t.latest$</latest>
+      </search>
+      <change>
+        <set token="form.dev">*</set>
+        <set token="form.server_filter">*</set>
+      </change>
+    </input>
+    <input type="dropdown" token="dev">
+      <label>interface</label>
+      <choice value="*">All</choice>
+      <fieldForLabel>interface</fieldForLabel>
+      <fieldForValue>dev</fieldForValue>
+      <search>
+        <query>| tstats count, first(wlan.SSID) as wlan.SSID, values(address) as address, first(osx_hw_port) as osx_hw_port, first(platform.system) as system where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host|s$ by dev
+        | eval interface=case(isnotnull(osx_hw_port), osx_hw_port . " (".dev.")", system="Windows", replace(dev, "adapter (local area|wireless network|ethernet)(?: connection)?", ""), 0==0, dev)</query>
+        <earliest>$t.earliest$</earliest>
+        <latest>$t.latest$</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="server_filter">
+      <label>Host service</label>
+      <prefix>server.sponsor="</prefix>
+      <suffix>"</suffix>
+      <fieldForLabel>server.sponsor</fieldForLabel>
+      <fieldForValue>server.sponsor</fieldForValue>
+      <search>
+        <query>| tstats count where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host|s$ dev=$dev|s$ by server.sponsor | sort server.sponsor</query>
+        <earliest>$t.earliest$</earliest>
+        <latest>$t.latest$</latest>
+      </search>
+      <choice value="*">All</choice>
+    </input>
+    <input type="time" token="t">
+      <label></label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>SpeedTest Servers</title>
+      <table>
+        <search base="updown_search">
+          <query>
+          | stats sum(count) as count sum(bytes_received) as bytes_received, sum(bytes_sent) as bytes_sent by server.host
+        </query>
+        </search>
+        <option name="count">10</option>
+        <option name="percentagesRow">false</option>
+        <option name="totalsRow">true</option>
+        <format type="number" field="bytes_received">
+          <option name="precision">0</option>
+          <option name="unit">byes</option>
+        </format>
+        <format type="number" field="bytes_sent">
+          <option name="precision">0</option>
+          <option name="unit">bytes</option>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <title>Details</title>
+      <table>
+        <search base="updown_search">
+          <query>| stats sum(count) as count, range(_time) as time_span, values(wlan.SSID) as wlan.SSID, values(wlan.BSSID) as BSSID, values(client.isp) as client.isp, values(address) as address, last(server.sponsor) as server.sponsor by dev, client.ip</query>
+        </search>
+        <option name="count">5</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>| tstats count, range(_time) as time_span, avg(download) as download, avg(upload) as upload, avg(ping) as ping, sum(bytes_received) as bytes_received, sum(bytes_sent) as bytes_sent, values(wlan.SSID) as wlan.SSID, values(wlan.BSSID) as BSSID, values(client.isp) as client.isp, values(address) as address where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host|s$ by dev | foreach download upload [ eval &lt;&lt;FIELD&gt;&gt;=round(&lt;&lt;FIELD&gt;&gt;/1024/1024,2) ]
+  | eval speedtest_freq = tostring( round((time_span/count/60),0)*60, "duration")
+            | rename count as samples
+            | fields - time_span</query>
+          <earliest>$t.earliest$</earliest>
+          <latest>$t.latest$</latest>
+        </search>
+        <option name="count">10</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="number" field="download">
+          <option name="unit">Mbit/s</option>
+        </format>
+        <format type="number" field="upload">
+          <option name="unit">Mbit/s</option>
+        </format>
+        <format type="number" field="ping">
+          <option name="precision">1</option>
+          <option name="unit">ms</option>
+        </format>
+        <format type="number" field="bytes_received">
+          <option name="precision">0</option>
+        </format>
+        <format type="number" field="bytes_sent">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Internet Speed</title>
+      <input type="dropdown" token="timechart_span">
+        <label>Span</label>
+        <choice value="5m">5 min</choice>
+        <choice value="10m">10 min</choice>
+        <choice value="15m">15 min</choice>
+        <choice value="30m">30 min</choice>
+        <choice value="1h">1 hour</choice>
+        <choice value="4h">4 hour</choice>
+        <choice value="6h">6 hour</choice>
+        <choice value="1d">1 day</choice>
+        <choice value="1w">1 week</choice>
+        <default>15m</default>
+      </input>
+      <chart>
+        <search base="updown_search">
+          <query>| timechart span=$timechart_span$ avg(Download), avg(Upload), avg(ping)</query>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Bandwidth by hosting provider</title>
+      <input type="dropdown" token="map_by_field">
+        <label></label>
+        <choice value="Download">Download (Mbit/s)</choice>
+        <choice value="Upload">Upload (Mbit/s)</choice>
+        <choice value="Ping">Ping (ms)</choice>
+        <default>Download</default>
+      </input>
+      <map>
+        <search>
+          <query>index="kintyre-speedtest" index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host|s$ dev=$dev$
+| geostats latfield=server.lat longfield=server.lon avg($map_by_field$) by server.sponsor</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="mapping.choroplethLayer.colorBins">5</option>
+        <option name="mapping.choroplethLayer.colorMode">auto</option>
+        <option name="mapping.choroplethLayer.maximumColor">0xDB5800</option>
+        <option name="mapping.choroplethLayer.minimumColor">0x2F25BA</option>
+        <option name="mapping.choroplethLayer.neutralPoint">0</option>
+        <option name="mapping.choroplethLayer.shapeOpacity">0.75</option>
+        <option name="mapping.choroplethLayer.showBorder">1</option>
+        <option name="mapping.data.maxClusters">100</option>
+        <option name="mapping.legend.placement">bottomright</option>
+        <option name="mapping.map.center">(40.67,-75.42)</option>
+        <option name="mapping.map.panning">1</option>
+        <option name="mapping.map.scrollZoom">1</option>
+        <option name="mapping.map.zoom">7</option>
+        <option name="mapping.markerLayer.markerMaxSize">50</option>
+        <option name="mapping.markerLayer.markerMinSize">10</option>
+        <option name="mapping.markerLayer.markerOpacity">0.8</option>
+        <option name="mapping.showTiles">1</option>
+        <option name="mapping.tileLayer.maxZoom">7</option>
+        <option name="mapping.tileLayer.minZoom">0</option>
+        <option name="mapping.tileLayer.tileOpacity">1</option>
+        <option name="mapping.tileLayer.url">http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png</option>
+        <option name="mapping.type">marker</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </map>
+    </panel>
+  </row>
+</form>

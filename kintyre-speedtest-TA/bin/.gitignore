@@ -1,0 +1,3 @@
+# Stuff created by pip that we don't want to distribute
+lib/bin
+lib/*.dist-info

@@ -1,0 +1,13 @@
+<nav search_view="search" color="#35A4B7">
+    <view name="search"/>
+    <view name="datasets"/>
+    <view name="reports"/>
+    <view name="alerts"/>
+    <collection label="Dashboards">
+        <view name="average-performance" default='true'/>
+        <!--<collection label="All dashboards">
+            <view source="all" />
+        </collection>-->
+        <view name="dashboards" label="Other"/>
+    </collection>
+</nav>

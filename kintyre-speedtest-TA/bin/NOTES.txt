@@ -1,0 +1,194 @@
+
+# Linux get a list of interface IPs
+ip addr | grep inet | awk '{ if($7) { print $2 " " $7}; }'
+
+
+
+# On Mac OSX:  Get the list of what's what:
+
+networksetup -listallhardwareport
+
+Hardware Port: Wi-Fi
+Device: en0
+Ethernet Address: 8c:85:90:0f:c5:f0
+
+Hardware Port: USB 10/100/1000 LAN
+Device: en7
+Ethernet Address: 3c:18:a0:95:05:5e
+
+
+# Linux extended device/hwardware information:
+
+# Raspberry Pi2
+
+# ethtool - not installed by default ;-(     -i/--driver
+ 
+$ ethtool -i eth0
+driver: smsc95xx
+version: 22-Aug-2005
+firmware-version: smsc95xx USB 2.0 Ethernet
+bus-info: usb-20980000.usb-1.1
+supports-statistics: no
+supports-test: no
+supports-eeprom-access: yes
+supports-register-dump: yes
+supports-priv-flags: no
+
+
+ethtool -i wlan0
+driver: r8712u
+version:
+firmware-version:
+bus-info: 1-1.4:1.0
+supports-statistics: no
+supports-test: no
+supports-eeprom-access: no
+supports-register-dump: no
+supports-priv-flags: no
+
+$ iwconfig wlan0
+wlan0     IEEE 802.11bgn  ESSID:"LLAWAN"  Nickname:"rtl_wifi"
+          Mode:Managed  Frequency:2.462 GHz  Access Point: 14:91:82:BD:1C:57
+          Bit Rate:150 Mb/s   Sensitivity:0/0
+          Retry:off   RTS thr:off   Fragment thr:off
+          Power Management:off
+          Link Quality=100/100  Signal level=100/100  Noise level=0/100
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+
+lowell@lowell-pi-desktop:~$ iwconfig wlan0
+wlan0     IEEE 802.11bgn  ESSID:"LLAWAN"
+          Mode:Managed  Frequency:2.462 GHz  Access Point: 14:91:82:BD:1C:57
+          Bit Rate=72 Mb/s   Tx-Power=1496 dBm
+          Retry short limit:7   RTS thr:off   Fragment thr:off
+          Power Management:on
+          Link Quality=56/70  Signal level=-54 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+
+
+lshw -C network
+  *-network:0
+       description: Ethernet interface
+       physical id: 1
+       logical name: enxb827ebddae13
+       serial: b8:27:eb:dd:ae:13
+       size: 1Gbit/s
+       capacity: 1Gbit/s
+       capabilities: ethernet physical tp mii 10bt 10bt-fd 100bt 100bt-fd 1000bt-fd autonegotiation
+       configuration: autonegotiation=on broadcast=yes driver=lan78xx driverversion=1.0.6 duplex=full ip=10.0.1.33 link=yes multicast=yes port=MII speed=1Gbit/s
+  *-network:1
+       description: Wireless interface
+       physical id: 2
+       logical name: wlan0
+       serial: b8:27:eb:88:fb:46
+       capabilities: ethernet physical wireless
+       configuration: broadcast=yes driver=brcmfmac driverversion=7.45.154 firmware=01-4fbe0b04 ip=10.0.1.45 multicast=yes wireless=IEEE 802.11
+
+[STDERR] WARNING: you should run this program as super-user.
+
+
+
+
+$ /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I
+     agrCtlRSSI: -28
+     agrExtRSSI: 0
+    agrCtlNoise: -78
+    agrExtNoise: 0
+          state: running
+        op mode: station
+     lastTxRate: 217
+        maxRate: 217
+lastAssocStatus: 0
+    802.11 auth: open
+      link auth: wpa2-psk
+          BSSID: 14:91:82:bd:1c:57
+           SSID: LLAWAN
+            MCS: 23
+        channel: 11
+
+
+
+raspi-config can be run non-interactively by adding the keywork nonint followed
+by the appropriate function and arguments in that script.  For example:
+
+raspi-config nonint do_ssh 0
+raspi-config nonint do_hostname foo
+raspi-config nonint do_change_locale en_US.UTF-8
+raspi-config nonint do_configure_keyboard us
+raspi-config nonint do_change_timezone America/New_York
+
+root@foo:~# cat /usr/bin/raspi-config | grep -E '^[a-z_-]*\('
+is_pione() {
+is_pitwo() {
+is_pizero() {
+get_pi_type() {
+is_live() {
+is_ssh() {
+calc_wt_size() {
+do_about() {
+get_can_expand() {
+do_expand_rootfs() {
+set_config_var() {
+clear_config_var() {
+get_config_var() {
+get_overscan() {
+do_overscan() {
+get_pixdub() {
+is_number() {
+do_pixdub() {
+do_change_pass() {
+do_configure_keyboard() {
+do_change_locale() {
+do_change_timezone() {
+get_wifi_country() {
+do_wifi_country() {
+get_hostname() {
+do_hostname() {
+do_memory_split() { # Memory Split
+get_current_memory_split() {
+set_memory_split() {
+do_overclock() {
+set_overclock() {
+get_ssh() {
+do_ssh() {
+get_vnc() {
+do_vnc() {
+get_spi() {
+do_spi() {
+get_serial() {
+get_serial_hw() {
+do_serial() {
+disable_raspi_config_at_boot() {
+get_boot_cli() {
+get_autologin() {
+do_boot_behaviour() {
+get_boot_wait() {
+do_boot_wait() {
+get_boot_splash() {
+do_boot_splash() {
+get_rgpio() {
+do_rgpio() {
+get_camera() {
+do_camera() {
+get_onewire() {
+do_onewire() {
+do_gldriver() {
+get_net_names() {
+do_update() {
+do_audio() {
+do_resolution() {
+list_wlan_interfaces() {
+do_wifi_ssid_passphrase() {
+do_finish() {
+get_json_string_val() {
+do_apply_os_config() {
+nonint() {
+do_internationalisation_menu() {
+do_interface_menu() {
+do_advanced_menu() {
+do_boot_menu() {
+do_network_menu() {
+
