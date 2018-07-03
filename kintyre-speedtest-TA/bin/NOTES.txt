@@ -22,7 +22,7 @@ Ethernet Address: 3c:18:a0:95:05:5e
 # Raspberry Pi2
 
 # ethtool - not installed by default ;-(     -i/--driver
- 
+
 $ ethtool -i eth0
 driver: smsc95xx
 version: 22-Aug-2005
@@ -191,4 +191,3 @@ do_interface_menu() {
 do_advanced_menu() {
 do_boot_menu() {
 do_network_menu() {
-

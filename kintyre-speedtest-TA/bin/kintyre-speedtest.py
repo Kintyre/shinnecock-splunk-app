@@ -14,4 +14,3 @@ def output_to_scriptedinput(event):
 
 if __name__ == '__main__':
     main(output_to_scriptedinput)
-
