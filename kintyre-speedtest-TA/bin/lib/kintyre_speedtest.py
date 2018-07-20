@@ -16,11 +16,19 @@ from collections import namedtuple, OrderedDict
 from io import open
 
 
-# Use backported config parser for Python 2.7 for proper Unicode support
-try:
-    from configparser import ConfigParser
-except ImportError:
-    from backports.configparser import ConfigParser
+def ConfigParser(*args, **kwargs):
+    # Wonky lazy loader workaround (since this library is not required for splunk-embeded (TA)
+    # version), but this class is used by multiple methods (so we can't simply inline the import)
+
+    try:
+        # New name under Python 3
+        from configparser import ConfigParser as cp
+    except ImportError:
+        # Use backported config parser for Python 2.7 for proper Unicode support
+        from backports.configparser import ConfigParser as cp
+    # All future accesses of 'ConfigParser' will go directly to this class
+    globals()["ConfigParser"] = cp
+    return cp(*args, **kwargs)
 
 
 import ifcfg
@@ -35,7 +43,7 @@ def generate_agent_uuid():
     return str(u)
 
 
-JSON_FORMAT_VER = "0.3.6"
+JSON_FORMAT_VER = "0.3.7"
 
 def cli_parser(cmd, breaker, regexes, group_by="id"):
     cregexes = []
