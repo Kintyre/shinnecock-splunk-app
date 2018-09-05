@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+"""
+This is a repo maintenance script that upgrade the embedded copy of the 'kintyre-speedtest-agent'
+package distributed within the 'kintyre-speedtest-TA' app.
+
+This script should be run whenever a new upstream release of the agent is released.
+The agent lives here:  https://github.com/Kintyre/shinnecock-agent
+"""
+
 
 import sys
 import os
@@ -40,8 +48,8 @@ def abort_on_git_change():
 
 def pip_install(packages):
     # Use '--no-deps' here because we don't want to install the request library (with all
-    # depenencies).  The TA version of the agent dumps output to standard out not HEC and there's
-    # no need for external conf files for interactive use case several libraries are unnecessary.
+    # dependencies).  The TA version of the agent dumps output to standard out not HEC and there's
+    # no need for external .ini files, therefore several "required" libraries are unnecessary here.
     cmd = ["pip", "install", "--upgrade", "--no-deps", "--target", TARGET ] + packages
     proc = RUN(cmd, "proc", stdout=PIPE)
     (stdout, __) = proc.communicate()
