@@ -1,9 +1,13 @@
 <form>
-  <label>Speedtest Detail</label>
+  <search id="agent_dropdown">
+    <query>| tstats count where index="kintyre-speedtest" by host | lookup speedtest_agents host OUTPUT agent_org, agent_name, agent_hostname</query>
+    <earliest>-30d</earliest>
+  </search>
+  <label>Host | Interface | Service Details</label>
   <description>Drill-down into a specific speed-test reporting device</description>
   <search id="updown_search">
     <query>
-    | tstats count avg(download) as download, avg(upload) as upload, avg(ping) as ping, sum(bytes_received) as bytes_received, sum(bytes_sent) as bytes_sent, values(wlan.SSID) as wlan.SSID, values(wlan.BSSID) as BSSID, values(client.isp) as client.isp, values(address) as address where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host|s$ dev=$dev|s$ $server_filter$ by _time, server.host, client.ip dev span=5m
+    | tstats count avg(download) as download, avg(upload) as upload, avg(ping) as ping, sum(bytes_received) as bytes_received, sum(bytes_sent) as bytes_sent, values(wlan.SSID) as wlan.SSID, values(wlan.BSSID) as BSSID, values(client.isp) as client.isp, values(address) as address where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host|s$ dev=$dev|s$ $server_filter$ $isp_filter$ by _time, server.host, client.ip dev span=5m
     | eval Upload=round(upload/1048576,2)
     | eval Download=round(download/1048576,2)
     </query>
@@ -12,17 +16,18 @@
   </search>
   <fieldset submitButton="false">
     <input type="dropdown" token="host">
-      <label>Host</label>
-      <fieldForLabel>host</fieldForLabel>
+      <label>Agent name</label>
+      <fieldForLabel>agent_name</fieldForLabel>
       <fieldForValue>host</fieldForValue>
-      <search>
-        <query>| tstats count where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" dev=* by host | sort host</query>
-        <earliest>$t.earliest$</earliest>
-        <latest>$t.latest$</latest>
+      <search base="agent_dropdown">
+        <query>| dedup agent_hostname</query>
+        <!-- This could supress multiple hosts with the same name...  works for now in the simple use case. -->
       </search>
       <change>
+        <set token="host_uuid">$value$</set>
         <set token="form.dev">*</set>
         <set token="form.server_filter">*</set>
+        <set token="form.isp">*</set>
       </change>
     </input>
     <input type="dropdown" token="dev">
@@ -31,7 +36,7 @@
       <fieldForLabel>interface</fieldForLabel>
       <fieldForValue>dev</fieldForValue>
       <search>
-        <query>| tstats count, first(wlan.SSID) as wlan.SSID, values(address) as address, first(osx_hw_port) as osx_hw_port, first(platform.system) as system where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host|s$ by dev
+        <query>| tstats count, first(wlan.SSID) as wlan.SSID, values(address) as address, first(osx_hw_port) as osx_hw_port, first(platform.system) as system where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host_uuid|s$ by dev
         | eval interface=case(isnotnull(osx_hw_port), osx_hw_port . " (".dev.")", system="Windows", replace(dev, "adapter (local area|wireless network|ethernet)(?: connection)?", ""), 0==0, dev)</query>
         <earliest>$t.earliest$</earliest>
         <latest>$t.latest$</latest>
@@ -44,11 +49,25 @@
       <fieldForLabel>server.sponsor</fieldForLabel>
       <fieldForValue>server.sponsor</fieldForValue>
       <search>
-        <query>| tstats count where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host|s$ dev=$dev|s$ by server.sponsor | sort server.sponsor</query>
+        <query>| tstats count where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host_uuid|s$ dev=$dev|s$ by server.sponsor | sort server.sponsor</query>
         <earliest>$t.earliest$</earliest>
         <latest>$t.latest$</latest>
       </search>
       <choice value="*">All</choice>
+    </input>
+    <input type="dropdown" token="isp_filter">
+      <label>ISP</label>
+      <prefix>client.isp="</prefix>
+      <suffix>"</suffix>
+      <fieldForLabel>client.isp</fieldForLabel>
+      <fieldForValue>client.isp</fieldForValue>
+      <search>
+        <query>| tstats count where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host_uuid|s$ dev=$dev|s$ by client.isp | sort client.ispr</query>
+        <earliest>$t.earliest$</earliest>
+        <latest>$t.latest$</latest>
+      </search>
+      <choice value="*">All</choice>
+      <initialValue>*</initialValue>
     </input>
     <input type="time" token="t">
       <label></label>
@@ -60,42 +79,85 @@
   </fieldset>
   <row>
     <panel>
-      <title>SpeedTest Servers</title>
-      <table>
-        <search base="updown_search">
-          <query>
-          | stats sum(count) as count sum(bytes_received) as bytes_received, sum(bytes_sent) as bytes_sent by server.host
-        </query>
+      <title>Speedtest Servers Summary</title>
+      <chart>
+        <search base="updown_search"><query>|  stats sum(count) as count by server.host</query>
         </search>
-        <option name="count">10</option>
-        <option name="percentagesRow">false</option>
-        <option name="totalsRow">true</option>
-        <format type="number" field="bytes_received">
-          <option name="precision">0</option>
-          <option name="unit">byes</option>
-        </format>
-        <format type="number" field="bytes_sent">
-          <option name="precision">0</option>
-          <option name="unit">bytes</option>
-        </format>
-      </table>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
     </panel>
     <panel>
-      <title>Details</title>
+      <title>Wireless Networks Summary</title>
       <table>
         <search base="updown_search">
-          <query>| stats sum(count) as count, range(_time) as time_span, values(wlan.SSID) as wlan.SSID, values(wlan.BSSID) as BSSID, values(client.isp) as client.isp, values(address) as address, last(server.sponsor) as server.sponsor by dev, client.ip</query>
+          <query>| stats sum(count) as count, range(_time) as time_span, values(wlan.BSSID) as BSSID, values(client.ip) as IP, values(client.isp) as client.isp, values(address) as address, last(server.sponsor) as server.sponsor avg(Download) as Download by wlan.SSID
+| eventstats sum(count) as total_count, max(Download) as Download_upper
+| eval Download_upper=max(Download_upper, 10)
+| eval Download=round(Download,0)
+| eval "Percent"=mvappend("##__SPARKLINE__##", "0", tostring(round(count/total_count*100,0)), "100")
+| eval "Download Rate"=mvappend("##__SPARKLINE__##", "0", tostring(round(Download/Download_upper*Download_upper,0)), tostring(ceiling(Download_upper)))
+| fields - address count BSSID time_span total_count - Download_upper
+| rename Download as DL, wlan.SSID as SSID, client.isp as ISP
+| table SSID "Download Rate" ISP Percent *</query>
         </search>
         <option name="count">5</option>
+        <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+        <format field="Percent" type="sparkline">
+          <option name="type">bullet</option>
+          <option name="height">20px</option>
+          <option name="width">100px</option>
+          <!--
+          <option name="targetColor">#ffffff</option>
+          <option name="rangeColors">['#d3dafe','#a8b6ff','#1f94ff ']</option>
+          -->
+        </format>
+        <format field="Download Rate" type="sparkline">
+          <option name="type">bullet</option>
+          <option name="height">20px</option>
+          <option name="width">100px</option>
+          <option name="targetWidth">0px</option>
+          <!--
+          <option name="targetColor">#ffffff</option>
+          <option name="rangeColors">['#d3dafe','#a8b6ff','#1f94ff ']</option> -->
+        </format>
       </table>
     </panel>
   </row>
   <row>
     <panel>
+      <title>Speed Over Time</title>
+      <input type="dropdown" token="timechart_span">
+        <label>Span</label>
+        <choice value="5m">5 min</choice>
+        <choice value="10m">10 min</choice>
+        <choice value="15m">15 min</choice>
+        <choice value="30m">30 min</choice>
+        <choice value="1h">1 hour</choice>
+        <choice value="4h">4 hour</choice>
+        <choice value="6h">6 hour</choice>
+        <choice value="1d">1 day</choice>
+        <choice value="1w">1 week</choice>
+        <default>15m</default>
+      </input>
+      <chart>
+        <search base="updown_search">
+          <query>| timechart span=$timechart_span$ avg(Download), avg(Upload), avg(ping)</query>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Adapters</title>
       <table>
         <search>
-          <query>| tstats count, range(_time) as time_span, avg(download) as download, avg(upload) as upload, avg(ping) as ping, sum(bytes_received) as bytes_received, sum(bytes_sent) as bytes_sent, values(wlan.SSID) as wlan.SSID, values(wlan.BSSID) as BSSID, values(client.isp) as client.isp, values(address) as address where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host|s$ by dev | foreach download upload [ eval &lt;&lt;FIELD&gt;&gt;=round(&lt;&lt;FIELD&gt;&gt;/1024/1024,2) ]
+          <query>| tstats count, range(_time) as time_span, avg(download) as download, avg(upload) as upload, avg(ping) as ping, sum(bytes_received) as bytes_received, sum(bytes_sent) as bytes_sent, values(wlan.SSID) as wlan.SSID, values(wlan.BSSID) as BSSID, values(client.isp) as client.isp, values(address) as address where index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host_uuid|s$ by dev | foreach download upload [ eval &lt;&lt;FIELD&gt;&gt;=round(&lt;&lt;FIELD&gt;&gt;/1024/1024,2) ]
   | eval speedtest_freq = tostring( round((time_span/count/60),0)*60, "duration")
             | rename count as samples
             | fields - time_span</query>
@@ -125,28 +187,39 @@
   </row>
   <row>
     <panel>
-      <title>Internet Speed</title>
-      <input type="dropdown" token="timechart_span">
-        <label>Span</label>
-        <choice value="5m">5 min</choice>
-        <choice value="10m">10 min</choice>
-        <choice value="15m">15 min</choice>
-        <choice value="30m">30 min</choice>
-        <choice value="1h">1 hour</choice>
-        <choice value="4h">4 hour</choice>
-        <choice value="6h">6 hour</choice>
-        <choice value="1d">1 day</choice>
-        <choice value="1w">1 week</choice>
-        <default>15m</default>
-      </input>
-      <chart>
+      <title>All Networks</title>
+      <table>
         <search base="updown_search">
-          <query>| timechart span=$timechart_span$ avg(Download), avg(Upload), avg(ping)</query>
+          <query>| stats sum(count) as count, range(_time) as time_span, values(wlan.SSID) as wlan.SSID, values(wlan.BSSID) as BSSID, values(client.isp) as client.isp, values(address) as address, last(server.sponsor) as server.sponsor by dev, client.ip</query>
         </search>
-        <option name="charting.chart">line</option>
-        <option name="charting.drilldown">none</option>
+        <option name="count">5</option>
         <option name="refresh.display">progressbar</option>
-      </chart>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>All SpeedTest Servers</title>
+      <table>
+        <search base="updown_search">
+          <query>eval mb_received=bytes_received/1024/1024 | eval mb_sent=bytes_sent/1024/1024  
+|  stats sum(count) as count sum(mb_received) as mb_received, sum(mb_sent) as mb_sent by server.host</query>
+        </search>
+        <option name="count">10</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="totalsRow">true</option>
+        <format type="number" field="bytes_received">
+          <option name="unit">byes</option>
+          <option name="unitPosition">before</option>
+        </format>
+        <format type="number" field="bytes_sent">
+          <option name="precision">0</option>
+          <option name="unit">bytes</option>
+        </format>
+        <format type="number" field="mb_received"></format>
+        <format type="number" field="mb_sent"></format>
+      </table>
     </panel>
   </row>
   <row>
@@ -161,7 +234,7 @@
       </input>
       <map>
         <search>
-          <query>index="kintyre-speedtest" index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host|s$ dev=$dev$
+          <query>index="kintyre-speedtest" index="kintyre-speedtest" sourcetype="kintyre-speedtest-json" host=$host_uuid|s$ dev=$dev$
 | geostats latfield=server.lat longfield=server.lon avg($map_by_field$) by server.sponsor</query>
           <earliest>-7d@h</earliest>
           <latest>now</latest>

@@ -1,0 +1,28 @@
+<dashboard>
+  <label>Agents</label>
+  <row>
+    <panel>
+      <title>New registrations</title>
+      <table>
+        <search ref="New Agent Registrations"></search>
+        <option name="drilldown">row</option>
+        <drilldown>
+          <link target="_blank">/app/kintyre-speedtest/speedtest_detail?form.host=$row.host$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Inventory</title>
+      <table>
+        <search ref="Agent Inventory"></search>
+        <option name="drilldown">none</option>
+        <option name="drilldown">row</option>
+        <drilldown>
+          <link target="_blank">/app/kintyre-speedtest/speedtest_detail?form.host=$row.host$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</dashboard>

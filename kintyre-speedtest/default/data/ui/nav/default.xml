@@ -1,13 +1,12 @@
 <nav search_view="search" color="#35A4B7">
-    <view name="search"/>
-    <view name="datasets"/>
-    <view name="reports"/>
-    <view name="alerts"/>
-    <collection label="Dashboards">
-        <view name="average-performance" default='true'/>
-        <!--<collection label="All dashboards">
-            <view source="all" />
-        </collection>-->
-        <view name="dashboards" label="Other"/>
+    <view name="average-performance" default="true"/>
+    <view name="speedtest_detail"/>
+    <view name="agents"/>
+    <collection label="Default">
+        <view name="search"/>
+        <view name="datasets"/>
+        <view name="reports"/>
+        <view name="alerts"/>
+        <view name="dashboards"/>
     </collection>
 </nav>

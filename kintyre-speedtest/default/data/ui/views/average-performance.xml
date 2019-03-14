@@ -1,4 +1,14 @@
 <form>
+  <search id="agent_dropdown">
+    <query>| tstats count where index="kintyre-speedtest" by host | lookup speedtest_agents host OUTPUT agent_org, agent_name, agent_hostname</query>
+    <earliest>-30d</earliest>
+  </search>
+  <search id="base">
+    <query>index="kintyre-speedtest" agent_org=$agent_org|s$ agent_name=$agent_name|s$ agent_hostname=$agent_host|s$ ISP=$isp|s$ | sitimechart avg(Download) AS "Average Download", avg(Upload) AS "Average Upload",  avg(Ping) AS "Average Ping" span=1h</query>
+    <earliest>$timepicker.earliest$</earliest>
+    <latest>$timepicker.latest$</latest>
+    <sampleRatio>1</sampleRatio>
+  </search>
   <label>Average Performance</label>
   <fieldset submitButton="false" autoRun="true">
     <input type="time" token="timepicker" searchWhenChanged="true">
@@ -8,34 +18,55 @@
         <latest>@d</latest>
       </default>
     </input>
-    <input type="dropdown" token="host" searchWhenChanged="true">
-      <label>Host</label>
-      <choice value="*">All</choice>
-      <search>
-        <query>index="kintyre-speedtest" | dedup host</query>
-      </search>
-      <default>*</default>
-      <fieldForLabel>host</fieldForLabel>
-      <fieldForValue>host</fieldForValue>
-    </input>
-    <input type="checkbox" token="ISP" searchWhenChanged="true">
+    <input type="dropdown" token="isp" searchWhenChanged="true">
       <label>ISP</label>
       <fieldForLabel>ISP</fieldForLabel>
       <fieldForValue>ISP</fieldForValue>
       <search>
         <query>index=kintyre-speedtest | dedup ISP | sort ISP | table ISP</query>
+        <earliest>$timepicker.earliest$</earliest>
+        <latest>$timepicker.latest$</latest>
       </search>
+      <choice value="*">Any</choice>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="agent_org" searchWhenChanged="true">
+      <label>Agent Organization</label>
+      <choice value="*">All</choice>
+      <search base="agent_dropdown">
+        <query>| dedup agent_org</query>
+      </search>
+      <default>*</default>
+      <fieldForLabel>agent_org</fieldForLabel>
+      <fieldForValue>agent_org</fieldForValue>
+    </input>
+    <input type="dropdown" token="agent_name" searchWhenChanged="true">
+      <label>Agent</label>
+      <choice value="*">All</choice>
+      <search base="agent_dropdown">
+        <query>| search agent_org=$agent_org|s$ | dedup agent_name</query>
+      </search>
+      <default>*</default>
+      <fieldForLabel>agent_name</fieldForLabel>
+      <fieldForValue>agent_name</fieldForValue>
+    </input>
+    <input type="dropdown" token="agent_host" searchWhenChanged="true">
+      <label>Hostname</label>
+      <choice value="*">All</choice>
+      <search base="agent_dropdown">
+        <query>| search agent_org=$agent_org|s$ agent_name=$agent_name|s$ | dedup agent_hostname</query>
+      </search>
+      <default>*</default>
+      <fieldForLabel>agent_hostname</fieldForLabel>
+      <fieldForValue>agent_hostname</fieldForValue>
     </input>
   </fieldset>
   <row>
     <panel>
       <title>Download</title>
       <single>
-        <search>
-          <query>| pivot kintyrespeedtestdataset RootObject avg(Download) AS "Download Average" SPLITROW _time AS _time PERIOD auto FILTER host is $host|s$ SORT 0 _time ROWSUMMARY 0 COLSUMMARY 0 SHOWOTHER 1</query>
-          <earliest>$timepicker.earliest$</earliest>
-          <latest>$timepicker.latest$</latest>
-          <sampleRatio>1</sampleRatio>
+        <search base="base">
+          <query> timechart avg(Download) AS "Average Download"</query>
         </search>
         <option name="colorBy">trend</option>
         <option name="colorMode">block</option>
@@ -60,12 +91,8 @@
     <panel>
       <title>Upload</title>
       <single>
-        <search>
-          <query>| pivot kintyrespeedtestdataset RootObject avg(Upload) AS "Average Upload" SPLITROW _time AS _time PERIOD auto FILTER host is $host|s$ SORT 0 _time ROWSUMMARY 0 COLSUMMARY 0 SHOWOTHER 1</query>
-          <earliest>$timepicker.earliest$</earliest>
-          <latest>$timepicker.latest$</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
+        <search base="base">
+          <query>timechart avg(Upload) AS "Average Upload"</query>=</search>
         <option name="colorBy">trend</option>
         <option name="colorMode">none</option>
         <option name="drilldown">none</option>
@@ -89,11 +116,8 @@
     <panel>
       <title>Latency</title>
       <single>
-        <search>
-          <query>| pivot kintyrespeedtestdataset RootObject avg(Ping) AS "Average Ping" SPLITROW _time AS _time PERIOD auto FILTER host is $host|s$ SORT 0 _time ROWSUMMARY 0 COLSUMMARY 0 SHOWOTHER 1</query>
-          <earliest>$timepicker.earliest$</earliest>
-          <latest>$timepicker.latest$</latest>
-          <sampleRatio>1</sampleRatio>
+        <search base="base">
+          <query>timechart avg(Ping) AS "Average Ping"</query>
         </search>
         <option name="colorBy">trend</option>
         <option name="colorMode">none</option>
@@ -115,47 +139,56 @@
         <option name="useThousandSeparators">1</option>
       </single>
     </panel>
-    <panel>
-      <title>Tx Errors</title>
-      <single>
-        <search>
-          <query>| mstats sum(_value) WHERE index="kintyre-speedtest-metrics" AND host=$host|s$ AND (metric_name=interface.if_errors.rx OR metric_name=interface.if_errors.tx) span=auto</query>
-          <earliest>$timepicker.earliest$</earliest>
-          <latest>$timepicker.latest$</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="colorBy">value</option>
-        <option name="colorMode">none</option>
-        <option name="drilldown">none</option>
-        <option name="numberPrecision">0</option>
-        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
-        <option name="rangeValues">[0,30,70,100]</option>
-        <option name="refresh.display">progressbar</option>
-        <option name="showSparkline">1</option>
-        <option name="showTrendIndicator">1</option>
-        <option name="trellis.enabled">0</option>
-        <option name="trellis.scales.shared">1</option>
-        <option name="trellis.size">medium</option>
-        <option name="trendColorInterpretation">standard</option>
-        <option name="trendDisplayMode">absolute</option>
-        <option name="unitPosition">after</option>
-        <option name="useColors">0</option>
-        <option name="useThousandSeparators">1</option>
-      </single>
-    </panel>
   </row>
   <row>
     <panel>
-      <title>Over time</title>
-      <chart>
+      <map>
+        <title>GeoStats</title>
         <search>
-          <query>index="kintyre-speedtest" host=$host|s$ | timechart avg(Ping) as latency, avg(Upload) as upload, avg(Download) as download span=5m</query>
+          <query>index="kintyre-speedtest" NOT host=b9f45f86-5a3a-4ce6-8099-8fd3056258be agent_org=$agent_org|s$ agent_name=$agent_name|s$ agent_hostname=$agent_host|s$ ISP=$isp|s$  | iplocation client_ip |geostats avg(Download) by host</query>
           <earliest>$timepicker.earliest$</earliest>
           <latest>$timepicker.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
+        <option name="drilldown">none</option>
+        <option name="mapping.choroplethLayer.colorBins">5</option>
+        <option name="mapping.choroplethLayer.colorMode">auto</option>
+        <option name="mapping.choroplethLayer.maximumColor">0xaf575a</option>
+        <option name="mapping.choroplethLayer.minimumColor">0x62b3b2</option>
+        <option name="mapping.choroplethLayer.neutralPoint">0</option>
+        <option name="mapping.choroplethLayer.shapeOpacity">0.75</option>
+        <option name="mapping.choroplethLayer.showBorder">1</option>
+        <option name="mapping.data.maxClusters">100</option>
+        <option name="mapping.legend.placement">bottomright</option>
+        <option name="mapping.map.center">(40.48,-76.81)</option>
+        <option name="mapping.map.panning">1</option>
+        <option name="mapping.map.scrollZoom">0</option>
+        <option name="mapping.map.zoom">7</option>
+        <option name="mapping.markerLayer.markerMaxSize">50</option>
+        <option name="mapping.markerLayer.markerMinSize">10</option>
+        <option name="mapping.markerLayer.markerOpacity">0.8</option>
+        <option name="mapping.showTiles">1</option>
+        <option name="mapping.tileLayer.maxZoom">19</option>
+        <option name="mapping.tileLayer.minZoom">0</option>
+        <option name="mapping.tileLayer.tileOpacity">1</option>
+        <option name="mapping.tileLayer.url">http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png</option>
+        <option name="mapping.type">marker</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </map>
+    </panel>
+    <panel>
+      <title>Download histogram</title>
+      <chart>
+        <search>
+          <query>index="kintyre-speedtest" agent_org=$agent_org|s$ agent_name=$agent_name|s$ agent_hostname=$agent_host|s$ ISP=$isp|s$ | eval Download=floor(Download)| bin span=log2 Download | chart count by Download</query>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
+        </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">-45</option>
         <option name="charting.axisTitleX.visibility">visible</option>
         <option name="charting.axisTitleY.visibility">visible</option>
         <option name="charting.axisTitleY2.visibility">visible</option>
@@ -166,7 +199,7 @@
         <option name="charting.axisY2.abbreviation">none</option>
         <option name="charting.axisY2.enabled">0</option>
         <option name="charting.axisY2.scale">inherit</option>
-        <option name="charting.chart">line</option>
+        <option name="charting.chart">column</option>
         <option name="charting.chart.bubbleMaximumSize">50</option>
         <option name="charting.chart.bubbleMinimumSize">10</option>
         <option name="charting.chart.bubbleSizeBy">area</option>
@@ -187,15 +220,6 @@
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
       </chart>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <map>
-        <title>GeoStats</title>
-        <search ref="GeoStats"></search>
-        <option name="drilldown">none</option>
-      </map>
     </panel>
   </row>
 </form>
