@@ -38,11 +38,11 @@ more details along with a listing of all the great third party libraries making 
 ## Collecting speedtest data
 
 There are two supported methods for collecting speedtest data.  Speedtest data can be collected from
-ether the speedtest add-on or via a standalone agent.  If you Splunk ecosystem is already well
-defined and the endpoints you'd like to collect performance data from are already have universal forwarders configured to send data and
+ether the speedtest add-on or via a standalone agent.  If your Splunk ecosystem is already well
+defined and the endpoints you'd like to collect network performance data from already have universal forwarders
 managed via deployment server, then using the add-on is a natural fit.  However, if you are looking
-to collect bandwidth metrics from embedded devices or a remote fleet of laptops that are not part of
-your Splunk infrastructure than the standalone agent may be a better choice.  It's also possible to
+to collect bandwidth metrics from embedded devices or a fleet of remote laptops not part of
+your Splunk infrastructure, the standalone agent may be a better choice.  It's also possible to
 mix and match, if circumstances dictate.
 
 _Feature comparison:_
@@ -53,7 +53,7 @@ _Feature comparison:_
 | Deployment method | A splunk app | Python package |
 | Install | Deploy to endpoints via deployment server | Install python package and register agent |
 | Scheduling | Set the interval via `inputs.conf` on the deployment server | Uses external mechanism like `cron` or Windows Task scheduler |
-| Data forwarding | Using existing Splunk protocol (i.e., tcp/9997) | Splunk HTTP Event Collector (HEC) |
+| Data forwarding | Using existing Splunk protocol (i.e., tcp/9997) | Splunk HTTP Event Collector (HEC).  Can use traditionally open ports like HTTTPS (tcp/443) |
 | Python | Uses embedded python (Splunk enterprise) or OS-provided Python for Universal Forwarder | Requires OS-provided Python |
 | Configuration | Minimal options.  Handled by Splunk .conf files. | More options exists.  Initial setup handle via a `register` CLI option or by editing an `.ini` file. |
 
