@@ -1,4 +1,4 @@
-# Requirements file for kintyre-speedtest-agent
+# Requirements file for the kintyre-speedtest-agent
 
 ifcfg==0.17
 kintyre-speedtest-agent==0.3.7

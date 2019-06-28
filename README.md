@@ -11,9 +11,9 @@ Opening blurb (Brian to come up with something great....)
  * [Kntyre Speedtest Add-on for Splunk](./kintyre-speedtest-TA) - Speedtest data collection for
    splunk (universal forwarder) endpoints
 
-The Kintyre Speedtest Technology Add on uses the standalone Shinnecock Agent to capture and collect
+The Kintyre Speedtest Add-on uses the standalone Shinnecock Agent to capture and collect
 speedtest data.  Please visit the sibiling [Shinnecock Agent][shinnecock-agent-repo] repository for
-more details along with a listing of all the great third party libraries making this possible.
+more details including an index of the exceptional third party libraries making this possible.
 
 ## Requirements
 
@@ -32,18 +32,18 @@ more details along with a listing of all the great third party libraries making 
  * Install `kintyre-speedtest` on your search head.
  * Enable/Configure HEC (if you're using any standalone agents)
  * Setup / confirm indexes
- * Install agents (Use either deploy the `kintyre-speedtest-TA` or install the standalone agent)
+ * Install agents (Use either deploy the `kintyre-speedtest-TA` or install the standalone agent) 
 
 
 ## Collecting speedtest data
 
 There are two supported methods for collecting speedtest data.  Speedtest data can be collected from
-ether the speedtest add-on or via a standalone agent.  If your Splunk ecosystem is already well
+ether the Speedtest Add-on or via a standalone agent.  If your Splunk ecosystem is already well
 defined and the endpoints you'd like to collect network performance data from already have universal forwarders
-managed via deployment server, then using the add-on is a natural fit.  However, if you are looking
+managed via deployment server, then using the add-on is advised.  However, if you are looking
 to collect bandwidth metrics from embedded devices or a fleet of remote laptops not part of
-your Splunk infrastructure, the standalone agent may be a better choice.  It's also possible to
-mix and match, if circumstances dictate.
+your Splunk infrastructure, the standalone agent may be more suitable.  It's also possible to
+mix and match if circumstances dictate.
 
 _Feature comparison:_
 

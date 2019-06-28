@@ -28,7 +28,7 @@ export = system
 export = system
 
 
-### VIEWSTATES: even normal users should be able to create shared viewstates
+### VIEWSTATES: even base-level users should be able to create shared viewstates
 
 [viewstates]
 access = read : [ * ], write : [ * ]
