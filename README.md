@@ -11,7 +11,7 @@ Opening blurb (Brian to come up with something great....)
  * [Kntyre Speedtest Add-on for Splunk](./kintyre-speedtest-TA) - Speedtest data collection for
    splunk (universal forwarder) endpoints
 
-The Kintyre Speedtest Add-on uses the standalone Shinnecock Agent to capture and collect
+The Kintyre Speedtest Technology Add-on uses the standalone Shinnecock Agent to capture and collect
 speedtest data.  Please visit the sibiling [Shinnecock Agent][shinnecock-agent-repo] repository for
 more details including an index of the exceptional third party libraries making this possible.
 
