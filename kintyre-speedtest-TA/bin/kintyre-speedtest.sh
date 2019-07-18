@@ -9,6 +9,7 @@ remove_splunk_path() {
     printf %s "${path#$D}"
 }
 
+unset SSL_CERT_FILE
 unset LD_LIBRARY_PATH
 unset PYTHONPATH
 
