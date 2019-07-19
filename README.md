@@ -1,8 +1,10 @@
 # Kintyre Speedtest Apps for Splunk
 
-Project name:  Shinnecock
+**Project name:**  Shinnecock
 
-Opening blurb (Brian to come up with something great....)
+How often do you visit speedtest.net or ping 8.8.8.8 to test the connectivity and performance of your Internet connection?  Would it be useful to look back over time at these results?  Almost everyone has multiple devices and uses different WiFi connections. Companies manage fleets of computers and multiple office locations probably with varied telecom providers.  Splunk is a simple and practical solution to see how the Internet service you pay for, or otherwise rely upon, is working for you over time.  We have wrapped the speedtest.net CLI into a Techonlogy Add-on that can be deployed to forwarders or easily installed via an open source Python package that works with HEC to ingest data into Splunk over commonly used ports.
+
+There is a large gap between what is available to consumers and small companies, and what is available only to companies with large investments in telecom and networking infrastructure, including the economic constraints with features.  As individuals or smaller companies who know Splunk or want a less expensive option to a very common problem, this app/TA/python package may be just the perfect fit.
 
 **Splunk apps:**
 
