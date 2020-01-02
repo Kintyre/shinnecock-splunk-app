@@ -40,7 +40,7 @@ more details including an index of the exceptional third party libraries making 
 ## Collecting speedtest data
 
 There are two supported methods for collecting speedtest data.  Speedtest data can be collected from
-ether the Speedtest Add-on or via a standalone agent.  If your Splunk ecosystem is already well
+either the Speedtest Add-on or via a standalone agent.  If your Splunk ecosystem is already well
 defined and the endpoints you'd like to collect network performance data from already have universal forwarders
 managed via deployment server, then using the add-on is advised.  However, if you are looking
 to collect bandwidth metrics from embedded devices or a fleet of remote laptops not part of
